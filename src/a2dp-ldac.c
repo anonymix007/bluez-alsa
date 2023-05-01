@@ -36,6 +36,8 @@
 #include "shared/log.h"
 #include "shared/rt.h"
 
+#include "a2dp-bttest.h"
+
 static const struct a2dp_channel_mode a2dp_ldac_channels[] = {
 	{ A2DP_CHM_MONO, 1, LDAC_CHANNEL_MODE_MONO },
 	{ A2DP_CHM_DUAL_CHANNEL, 2, LDAC_CHANNEL_MODE_DUAL },
@@ -171,6 +173,8 @@ void *a2dp_ldac_enc_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	rtp_header_t *rtp_header;
 	rtp_media_header_t *rtp_media_header;
@@ -213,6 +217,9 @@ void *a2dp_ldac_enc_thread(struct ba_transport_thread *th) {
 			if (ldacBT_encode(handle, input, &used, bt.tail, &encoded, &frames) != 0) {
 				error("LDAC encoding error: %s", ldacBT_strerror(ldacBT_get_error_code(handle)));
 				break;
+			}
+			if (encoded > 0) {
+				a2dp_bttest_write_frames(f, bt.tail, encoded, frames);
 			}
 
 			rtp_media_header->frame_count = frames;
@@ -273,6 +280,7 @@ void *a2dp_ldac_enc_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);
@@ -316,6 +324,7 @@ void *a2dp_ldac_dec_thread(struct ba_transport_thread *th) {
 
 	ffb_t bt = { 0 };
 	ffb_t pcm = { 0 };
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
 	pthread_cleanup_push(PTHREAD_CLEANUP(ffb_free), &bt);
 	pthread_cleanup_push(PTHREAD_CLEANUP(ffb_free), &pcm);
 
@@ -324,6 +333,7 @@ void *a2dp_ldac_dec_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	struct rtp_state rtp = { .synced = false };
 	/* RTP clock frequency equal to audio samplerate */
@@ -366,6 +376,8 @@ void *a2dp_ldac_dec_thread(struct ba_transport_thread *th) {
 				error("LDAC decoding error: %s", ldacBT_strerror(ldacBT_get_error_code(handle)));
 				break;
 			}
+			a2dp_bttest_write_frames(f, rtp_payload, used, 1);
+
 
 			rtp_payload += used;
 			rtp_payload_len -= used;
@@ -384,6 +396,7 @@ void *a2dp_ldac_dec_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);

@@ -36,6 +36,8 @@
 #include "shared/log.h"
 #include "shared/rt.h"
 
+#include "a2dp-bttest.h"
+
 static const struct a2dp_channel_mode a2dp_aac_channels[] = {
 	{ A2DP_CHM_MONO, 1, AAC_CHANNELS_1 },
 	{ A2DP_CHM_STEREO, 2, AAC_CHANNELS_2 },
@@ -303,6 +305,9 @@ void *a2dp_aac_enc_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
+
 
 	rtp_header_t *rtp_header;
 	/* initialize RTP header and get anchor for payload */
@@ -358,6 +363,8 @@ void *a2dp_aac_enc_thread(struct ba_transport_thread *th) {
 
 				size_t payload_len_max = t->mtu_write - RTP_HEADER_LEN;
 				size_t payload_len = out_args.numOutBytes;
+
+				a2dp_bttest_write_frames(f, bt.tail, payload_len, 1);
 
 				/* If the size of the RTP packet exceeds writing MTU, the RTP payload
 				 * should be fragmented. According to the RFC 3016, fragmentation of
@@ -415,6 +422,7 @@ void *a2dp_aac_enc_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);
@@ -477,6 +485,8 @@ void *a2dp_aac_dec_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	struct rtp_state rtp = { .synced = false };
 	/* RTP clock frequency equal to 90kHz */
@@ -537,9 +547,12 @@ void *a2dp_aac_dec_thread(struct ba_transport_thread *th) {
 			continue;
 		}
 
+
 		unsigned int data_len = ffb_len_out(&latm);
 		unsigned int valid = ffb_len_out(&latm);
 		CStreamInfo *aacinf;
+		a2dp_bttest_write_frames(f, latm.data, data_len, 1);
+
 
 		if ((err = aacDecoder_Fill(handle, (uint8_t **)&latm.data, &data_len, &valid)) != AAC_DEC_OK)
 			error("AAC buffer fill error: %s", aacdec_strerror(err));
@@ -569,6 +582,7 @@ void *a2dp_aac_dec_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);

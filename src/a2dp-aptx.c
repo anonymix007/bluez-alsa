@@ -30,6 +30,8 @@
 #include "shared/log.h"
 #include "shared/rt.h"
 
+#include "a2dp-bttest.h"
+
 static const struct a2dp_channel_mode a2dp_aptx_channels[] = {
 	{ A2DP_CHM_STEREO, 2, APTX_CHANNEL_MODE_STEREO },
 };
@@ -131,6 +133,8 @@ void *a2dp_aptx_enc_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	debug_transport_thread_loop(th, "START");
 	for (ba_transport_thread_state_set_running(th);;) {
@@ -168,6 +172,7 @@ void *a2dp_aptx_enc_thread(struct ba_transport_thread *th) {
 					error("Apt-X encoding error: %s", strerror(errno));
 					break;
 				}
+				a2dp_bttest_write_frames(f, bt.tail, encoded, 1);
 
 				input += len;
 				input_samples -= len;
@@ -205,6 +210,7 @@ void *a2dp_aptx_enc_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);
@@ -244,6 +250,8 @@ void *a2dp_aptx_dec_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	debug_transport_thread_loop(th, "START");
 	for (ba_transport_thread_state_set_running(th);;) {
@@ -262,6 +270,7 @@ void *a2dp_aptx_dec_thread(struct ba_transport_thread *th) {
 		size_t input_len = len;
 
 		ffb_rewind(&pcm);
+		a2dp_bttest_write_frames(f, input, (input_len / 4) * 4, 1);
 		while (input_len >= 4) {
 
 			size_t decoded = ffb_len_in(&pcm);
@@ -285,6 +294,7 @@ void *a2dp_aptx_dec_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);

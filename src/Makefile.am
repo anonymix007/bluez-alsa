@@ -15,6 +15,7 @@ bluealsa_SOURCES = \
 	shared/rt.c \
 	shared/nv.c \
 	a2dp.c \
+	a2dp-bttest.c \
 	a2dp-sbc.c \
 	at.c \
 	audio.c \

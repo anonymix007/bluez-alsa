@@ -34,6 +34,8 @@
 #include "shared/log.h"
 #include "shared/rt.h"
 
+#include "a2dp-bttest.h"
+
 static const struct a2dp_channel_mode a2dp_sbc_channels[] = {
 	{ A2DP_CHM_MONO, 1, SBC_CHANNEL_MODE_MONO },
 	{ A2DP_CHM_DUAL_CHANNEL, 2, SBC_CHANNEL_MODE_DUAL_CHANNEL },
@@ -208,6 +210,8 @@ void *a2dp_sbc_enc_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	rtp_header_t *rtp_header;
 	rtp_media_header_t *rtp_media_header;
@@ -260,6 +264,7 @@ void *a2dp_sbc_enc_thread(struct ba_transport_thread *th) {
 				error("SBC encoding error: %s", sbc_strerror(len));
 				break;
 			}
+			a2dp_bttest_write_frames(f, bt.tail, encoded, 1);
 
 			len = len / sizeof(int16_t);
 			input += len;
@@ -303,6 +308,7 @@ void *a2dp_sbc_enc_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);
@@ -345,6 +351,8 @@ void *a2dp_sbc_dec_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	struct rtp_state rtp = { .synced = false };
 	/* RTP clock frequency equal to audio samplerate */
@@ -390,6 +398,7 @@ void *a2dp_sbc_dec_thread(struct ba_transport_thread *th) {
 				error("SBC decoding error: %s", sbc_strerror(len));
 				break;
 			}
+			a2dp_bttest_write_frames(f, rtp_payload, decoded, 1);
 
 #if DEBUG
 			if (sbc_bitpool != sbc.bitpool) {
@@ -415,6 +424,7 @@ void *a2dp_sbc_dec_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);

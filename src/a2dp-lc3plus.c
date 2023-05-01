@@ -36,6 +36,8 @@
 #include "shared/log.h"
 #include "shared/rt.h"
 
+#include "a2dp-bttest.h"
+
 static const struct a2dp_channel_mode a2dp_lc3plus_channels[] = {
 	{ A2DP_CHM_MONO, 1, LC3PLUS_CHANNELS_1 },
 	{ A2DP_CHM_STEREO, 2, LC3PLUS_CHANNELS_2 },
@@ -244,6 +246,8 @@ void *a2dp_lc3plus_enc_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	rtp_header_t *rtp_header;
 	rtp_media_header_t *rtp_media_header;
@@ -294,6 +298,7 @@ void *a2dp_lc3plus_enc_thread(struct ba_transport_thread *th) {
 				error("LC3plus encoding error: %s", lc3plus_strerror(err));
 				break;
 			}
+			a2dp_bttest_write_frames(f, bt.tail, encoded, 1);
 
 			input += lc3plus_frame_samples;
 			input_samples -= lc3plus_frame_samples;
@@ -374,6 +379,7 @@ void *a2dp_lc3plus_enc_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);
@@ -449,6 +455,8 @@ void *a2dp_lc3plus_dec_thread(struct ba_transport_thread *th) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
+	FILE *f = a2dp_bttest_create(__FILE__, __FUNCTION__);
+	pthread_cleanup_push(PTHREAD_CLEANUP(a2dp_bttest_close), f);
 
 	struct rtp_state rtp = { .synced = false };
 	/* RTP clock frequency equal to the RTP clock rate */
@@ -566,6 +574,7 @@ void *a2dp_lc3plus_dec_thread(struct ba_transport_thread *th) {
 				error("LC3plus decoding error: %s", lc3plus_strerror(err));
 				break;
 			}
+			a2dp_bttest_write_frames(f, lc3plus_payload, lc3plus_frame_len, 1);
 
 			lc3plus_payload += lc3plus_frame_len;
 
@@ -586,6 +595,7 @@ void *a2dp_lc3plus_dec_thread(struct ba_transport_thread *th) {
 
 fail:
 	debug_transport_thread_loop(th, "EXIT");
+	pthread_cleanup_pop(1);
 fail_ffb:
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(1);
