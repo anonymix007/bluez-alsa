@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-FILE *a2dp_bttest_create(const char *codec_name, const char *encdec);
+FILE *a2dp_bttest_create(const char *file_name, const char *encdec);
 void a2dp_bttest_write_frame(FILE *f, const uint8_t *frame, size_t len);
 void a2dp_bttest_write_frames(FILE *f, const uint8_t *frames, size_t total_len, size_t count);
 void a2dp_bttest_close(FILE *f);
