@@ -264,6 +264,7 @@ void *a2dp_sbc_enc_thread(struct ba_transport_thread *th) {
 				error("SBC encoding error: %s", sbc_strerror(len));
 				break;
 			}
+			a2dp_bttest_write_frames(f, bt.tail, encoded, 1);
 
 			len = len / sizeof(int16_t);
 			input += len;
@@ -281,7 +282,6 @@ void *a2dp_sbc_enc_thread(struct ba_transport_thread *th) {
 			rtp_media_header->frame_count = sbc_frames;
 
 			ssize_t len = ffb_blen_out(&bt);
-			a2dp_bttest_write_frames(f, bt.data, len, 1);
 			if ((len = io_bt_write(th, bt.data, len)) <= 0) {
 				if (len == -1)
 					error("BT write error: %s", strerror(errno));
