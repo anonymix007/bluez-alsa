@@ -172,7 +172,6 @@ void *a2dp_aptx_enc_thread(struct ba_transport_thread *th) {
 					error("Apt-X encoding error: %s", strerror(errno));
 					break;
 				}
-				a2dp_bttest_write_frames(f, bt.tail, encoded, 1);
 
 				input += len;
 				input_samples -= len;
@@ -183,6 +182,8 @@ void *a2dp_aptx_enc_thread(struct ba_transport_thread *th) {
 			}
 
 			ssize_t len = ffb_blen_out(&bt);
+			a2dp_bttest_write_frames(f, bt.data, len, 1);
+
 			if ((len = io_bt_write(th, bt.data, len)) <= 0) {
 				if (len == -1)
 					error("BT write error: %s", strerror(errno));
