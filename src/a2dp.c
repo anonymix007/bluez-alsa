@@ -34,6 +34,9 @@
 #if ENABLE_LC3PLUS
 # include "a2dp-lc3plus.h"
 #endif
+#if ENABLE_FLAC
+# include "a2dp-flac.h"
+#endif
 #if ENABLE_LDAC
 # include "a2dp-ldac.h"
 #endif
@@ -48,6 +51,10 @@
 #include "shared/log.h"
 
 struct a2dp_codec * const a2dp_codecs[] = {
+#if ENABLE_FLAC
+	&a2dp_flac_source,
+	&a2dp_flac_sink,
+#endif
 #if ENABLE_LC3PLUS
 	&a2dp_lc3plus_source,
 	&a2dp_lc3plus_sink,
@@ -112,6 +119,9 @@ int a2dp_codecs_init(void) {
 #endif
 #if ENABLE_LC3PLUS
 	a2dp_lc3plus_init();
+#endif
+#if ENABLE_FLAC
+	a2dp_flac_init();
 #endif
 #if ENABLE_LDAC
 	a2dp_ldac_init();
@@ -284,8 +294,12 @@ uint16_t a2dp_get_vendor_codec_id(const void *capabilities, size_t size) {
 		case LC3PLUS_CODEC_ID:
 			return A2DP_CODEC_VENDOR_LC3PLUS;
 		} break;
+	case BT_COMPID_FIIO:
+		switch (codec_id) {
+		case FLAC_CODEC_ID:
+			return A2DP_CODEC_VENDOR_FLAC;
+		} break;
 	}
-
 	hexdump("Unknown vendor codec", capabilities, size, true);
 
 	errno = ENOTSUP;
@@ -476,6 +490,17 @@ uint32_t a2dp_check_configuration(
 	}
 #endif
 
+#if ENABLE_FLAC
+	case A2DP_CODEC_VENDOR_FLAC: {
+
+		const a2dp_flac_t *cap = configuration;
+		cap_chm = cap->channels;
+		cap_freq = cap->frequency;
+
+		break;
+	}
+#endif
+
 #if ENABLE_LDAC
 	case A2DP_CODEC_VENDOR_LDAC: {
 		const a2dp_ldac_t *cap = configuration;
@@ -565,6 +590,10 @@ int a2dp_filter_capabilities(
 #endif
 #if ENABLE_LC3PLUS
 	case A2DP_CODEC_VENDOR_LC3PLUS:
+		break;
+#endif
+#if ENABLE_FLAC
+	case A2DP_CODEC_VENDOR_FLAC:
 		break;
 #endif
 #if ENABLE_LDAC
@@ -891,6 +920,26 @@ int a2dp_select_configuration(
 		else {
 			error("LC3plus: No supported sampling frequencies: %#x",
 					LC3PLUS_GET_FREQUENCY(tmp.lc3plus));
+			goto fail;
+		}
+
+		break;
+	}
+#endif
+
+#if ENABLE_FLAC
+	case A2DP_CODEC_VENDOR_FLAC: {
+		a2dp_flac_t *cap = capabilities;
+
+		const unsigned int cap_chm = cap->channels;
+		if ((cap->channels = a2dp_codec_select_channel_mode(codec, cap_chm, false)) == 0) {
+			error("FLAC: No supported channel modes: %#x", tmp.ldac.channel_mode);
+			goto fail;
+		}
+
+		const unsigned int cap_freq = cap->frequency;
+		if ((cap->frequency = a2dp_codec_select_sampling_freq(codec, cap_freq, false)) == 0) {
+			error("FLAC: No supported sampling frequencies: %#x", tmp.ldac.frequency);
 			goto fail;
 		}
 

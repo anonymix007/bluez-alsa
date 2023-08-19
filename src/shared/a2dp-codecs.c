@@ -31,6 +31,7 @@ static const struct {
 	{ A2DP_CODEC_VENDOR_APTX_TWS, { "aptX-TWS", "apt-X-TWS" } },
 	{ A2DP_CODEC_VENDOR_FASTSTREAM, { "FastStream", "FS" } },
 	{ A2DP_CODEC_VENDOR_LC3PLUS, { "LC3plus" } },
+	{ A2DP_CODEC_VENDOR_FLAC, { "FLAC" } },
 	{ A2DP_CODEC_VENDOR_LDAC, { "LDAC" } },
 	{ A2DP_CODEC_VENDOR_LHDC, { "LHDC" } },
 	{ A2DP_CODEC_VENDOR_LHDC_LL, { "LHDC-LL", "LLAC" } },

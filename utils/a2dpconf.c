@@ -348,6 +348,27 @@ static void dump_lc3plus(const void *blob, size_t size) {
 			LC3PLUS_GET_FREQUENCY(*lc3plus) & LC3PLUS_SAMPLING_FREQ_96000 ? " 96000" : "");
 }
 
+static void dump_flac(const void *blob, size_t size) {
+	const a2dp_flac_t *flac = blob;
+	if (check_blob_size(sizeof(*flac), size) == -1)
+		return;
+	printf("FLAC <hex:%s> {\n", bintohex(blob, size));
+	printf_vendor(&flac->info);
+	printf(""
+			"  sampling-frequency =%s%s%s\n"
+			"  channels =%s%s\n"
+			"  bits_per_sample =%s%s\n"
+			"}\n",
+			FLAC_GET_FREQUENCY(*flac) & FLAC_SAMPLING_FREQ_44100 ? " 44100" : "",
+			FLAC_GET_FREQUENCY(*flac) & FLAC_SAMPLING_FREQ_48000 ? " 48000" : "",
+			FLAC_GET_FREQUENCY(*flac) & FLAC_SAMPLING_FREQ_96000 ? " 96000" : "",
+			flac->channels & FLAC_CHANNELS_1 ? " Mono" : "",
+			flac->channels & FLAC_CHANNELS_2 ? " Stereo" : "",
+			flac->bits_per_sample & FLAC_BITS_PER_SAMPLE_16 ? " 16" : "",
+			flac->bits_per_sample & FLAC_BITS_PER_SAMPLE_24 ? " 24" : "",
+
+}
+
 static void dump_ldac(const void *blob, size_t size) {
 	const a2dp_ldac_t *ldac = blob;
 	if (check_blob_size(sizeof(*ldac), size) == -1)
@@ -449,6 +470,7 @@ static struct {
 	{ A2DP_CODEC_VENDOR_APTX_LL, sizeof(a2dp_aptx_ll_new_t), dump_aptx_ll },
 	{ A2DP_CODEC_VENDOR_FASTSTREAM, sizeof(a2dp_faststream_t), dump_faststream },
 	{ A2DP_CODEC_VENDOR_LC3PLUS, sizeof(a2dp_lc3plus_t), dump_lc3plus },
+	{ A2DP_CODEC_VENDOR_FLAC, sizeof(a2dp_flac_t), dump_flac },
 	{ A2DP_CODEC_VENDOR_LDAC, sizeof(a2dp_ldac_t), dump_ldac },
 	{ A2DP_CODEC_VENDOR_LHDC, sizeof(a2dp_lhdc_t), dump_lhdc },
 	{ A2DP_CODEC_VENDOR_LHDC_LL, -1, dump_vendor },

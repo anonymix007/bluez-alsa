@@ -51,6 +51,7 @@
 #define A2DP_CODEC_VENDOR_APTX_TWS      0x25FF
 #define A2DP_CODEC_VENDOR_FASTSTREAM    0xA1FF
 #define A2DP_CODEC_VENDOR_LC3PLUS       0xC3FF
+#define A2DP_CODEC_VENDOR_FLAC          0x42FF
 #define A2DP_CODEC_VENDOR_LDAC          0x2DFF
 #define A2DP_CODEC_VENDOR_LHDC          0x4CFF
 #define A2DP_CODEC_VENDOR_LHDC_LL       0x44FF
@@ -324,6 +325,30 @@
 	.frequency1 = ((f) >> 8) & 0xff, \
 	.frequency2 = (f) & 0xff,
 
+#define FLAC_VENDOR_ID                  BT_COMPID_FIIO
+#define FLAC_CODEC_ID                   0x0001
+
+#define FLAC_CHANNELS_1                 0x01
+#define FLAC_CHANNELS_2                 0x02
+
+#define FLAC_SAMPLING_FREQ_44100        0x01
+#define FLAC_SAMPLING_FREQ_48000        0x02
+#define FLAC_SAMPLING_FREQ_96000        0x08
+
+#define FLAC_BITS_PER_SAMPLE_16         0x01
+#define FLAC_BITS_PER_SAMPLE_24         0x02
+
+#define FLAC_GET_FREQUENCY(a) \
+	((a).frequency)
+
+#define FLAC_SET_FREQUENCY(a, f) \
+	do { \
+		(a).frequency = (f); \
+	} while (0)
+
+#define FLAC_INIT_FREQUENCY(f) \
+	.frequency = (f) & 0xff,
+
 #define LDAC_VENDOR_ID                  BT_COMPID_SONY
 #define LDAC_CODEC_ID                   0x00aa
 
@@ -483,6 +508,15 @@ typedef struct {
 
 typedef struct {
 	a2dp_vendor_codec_t info;
+	uint8_t frequency;
+	uint8_t channels;
+	uint8_t bits_per_sample;
+	uint8_t reserved1;
+	uint8_t reserved2;
+} __attribute__ ((packed)) a2dp_flac_t;
+
+typedef struct {
+	a2dp_vendor_codec_t info;
 	uint8_t frequency:6;
 	uint8_t rfa1:2;
 	uint8_t channel_mode:3;
@@ -597,6 +631,15 @@ typedef struct {
 
 typedef struct {
 	a2dp_vendor_codec_t info;
+	uint8_t frequency;
+	uint8_t channels;
+	uint8_t bits_per_sample;
+	uint8_t reserved1;
+	uint8_t reserved2;
+} __attribute__ ((packed)) a2dp_flac_t;
+
+typedef struct {
+	a2dp_vendor_codec_t info;
 	uint8_t rfa1:2;
 	uint8_t frequency:6;
 	uint8_t rfa2:5;
@@ -651,6 +694,7 @@ typedef union {
 	a2dp_aptx_ll_new_t aptx_ll_new;
 	a2dp_aptx_hd_t aptx_hd;
 	a2dp_lc3plus_t lc3plus;
+	a2dp_flac_t flac;
 	a2dp_ldac_t ldac;
 	a2dp_lhdc_t lhdc;
 	a2dp_lhdc_v1_t lhdc_v1;

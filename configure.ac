@@ -172,6 +172,15 @@ AM_COND_IF([ENABLE_LC3PLUS], [
 	AC_DEFINE([ENABLE_LC3PLUS], [1], [Define to 1 if LC3plus is enabled.])
 ])
 
+AC_ARG_ENABLE([flac],
+	[AS_HELP_STRING([--enable-flac], [enable FLAC support])])
+AM_CONDITIONAL([ENABLE_FLAC], [test "x$enable_flac" = "xyes"])
+AM_COND_IF([ENABLE_FLAC], [
+	AC_CHECK_HEADERS([dr_flac.h],
+		[], [AC_MSG_ERROR([FLAC header file not found])])
+	AC_DEFINE([ENABLE_FLAC], [1], [Define to 1 if FLAC is enabled.])
+])
+
 AC_ARG_ENABLE([ldac],
 	[AS_HELP_STRING([--enable-ldac], [enable LDAC support])])
 AM_CONDITIONAL([ENABLE_LDAC], [test "x$enable_ldac" = "xyes"])

@@ -48,6 +48,9 @@
 #if ENABLE_LC3PLUS
 # include "a2dp-lc3plus.h"
 #endif
+#if ENABLE_FLAC
+# include "a2dp-flac.h"
+#endif
 #if ENABLE_LDAC
 # include "a2dp-ldac.h"
 #endif
@@ -920,6 +923,10 @@ const char *ba_transport_debug_name(
 		case A2DP_CODEC_VENDOR_LC3PLUS:
 			return "A2DP Source (LC3plus)";
 #endif
+#if ENABLE_FLAC
+		case A2DP_CODEC_VENDOR_FLAC:
+			return "A2DP Source (FLAC)";
+#endif
 #if ENABLE_LDAC
 		case A2DP_CODEC_VENDOR_LDAC:
 			return "A2DP Source (LDAC)";
@@ -952,6 +959,10 @@ const char *ba_transport_debug_name(
 #if ENABLE_LC3PLUS
 		case A2DP_CODEC_VENDOR_LC3PLUS:
 			return "A2DP Sink (LC3plus)";
+#endif
+#if ENABLE_FLAC
+		case A2DP_CODEC_VENDOR_FLAC:
+			return "A2DP Sink (FLAC)";
 #endif
 #if ENABLE_LDAC
 		case A2DP_CODEC_VENDOR_LDAC:
@@ -1286,6 +1297,11 @@ static void ba_transport_set_codec_a2dp(
 		a2dp_lc3plus_transport_init(t);
 		break;
 #endif
+#if ENABLE_FLAC
+	case A2DP_CODEC_VENDOR_FLAC:
+		a2dp_flac_transport_init(t);
+		break;
+#endif
 #if ENABLE_LDAC
 	case A2DP_CODEC_VENDOR_LDAC:
 		a2dp_ldac_transport_init(t);
@@ -1429,6 +1445,10 @@ int ba_transport_start(struct ba_transport *t) {
 #if ENABLE_LC3PLUS
 		case A2DP_CODEC_VENDOR_LC3PLUS:
 			return a2dp_lc3plus_transport_start(t);
+#endif
+#if ENABLE_FLAC
+		case A2DP_CODEC_VENDOR_FLAC:
+			return a2dp_flac_transport_start(t);
 #endif
 #if ENABLE_LDAC
 		case A2DP_CODEC_VENDOR_LDAC:

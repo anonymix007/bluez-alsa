@@ -78,6 +78,11 @@ bluealsa_SOURCES += \
 	a2dp-lc3plus.c
 endif
 
+if ENABLE_FLAC
+bluealsa_SOURCES += \
+	a2dp-flac.c
+endif
+
 if ENABLE_LDAC
 bluealsa_SOURCES += \
 	a2dp-ldac.c

@@ -28,6 +28,8 @@
 #define BT_COMPID_CYPRESS            0x0131
 #define BT_COMPID_SAVITECH           0x053A
 #define BT_COMPID_FRAUNHOFER_IIS     0x08A9
+#define BT_COMPID_FIIO               0x04A5
+
 
 /**
  * Bluetooth UUIDs associated with audio profiles. */

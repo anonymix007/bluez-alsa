@@ -356,6 +356,10 @@ static bool ba_variant_populate_sep(GVariantBuilder *props, const struct a2dp_se
 	case A2DP_CODEC_VENDOR_LC3PLUS:
 		break;
 #endif
+#if ENABLE_FLAC
+	case A2DP_CODEC_VENDOR_FLAC:
+		break;
+#endif
 #if ENABLE_LDAC
 	case A2DP_CODEC_VENDOR_LDAC:
 		break;

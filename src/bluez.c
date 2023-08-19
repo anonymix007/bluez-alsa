@@ -314,6 +314,10 @@ static const char *bluez_transport_profile_to_bluez_object_path(
 		case A2DP_CODEC_VENDOR_LC3PLUS:
 			return "/A2DP/LC3plus/source";
 #endif
+#if ENABLE_FLAC
+		case A2DP_CODEC_VENDOR_FLAC:
+			return "/A2DP/FLAC/source";
+#endif
 #if ENABLE_LDAC
 		case A2DP_CODEC_VENDOR_LDAC:
 			return "/A2DP/LDAC/source";
@@ -349,6 +353,10 @@ static const char *bluez_transport_profile_to_bluez_object_path(
 #if ENABLE_LC3PLUS
 		case A2DP_CODEC_VENDOR_LC3PLUS:
 			return "/A2DP/LC3plus/sink";
+#endif
+#if ENABLE_FLAC
+		case A2DP_CODEC_VENDOR_FLAC:
+			return "/A2DP/FLAC/sink";
 #endif
 #if ENABLE_LDAC
 		case A2DP_CODEC_VENDOR_LDAC:
