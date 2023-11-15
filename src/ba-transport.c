@@ -902,6 +902,10 @@ const char *ba_transport_debug_name(
 		case A2DP_CODEC_VENDOR_LDAC:
 			return "A2DP Source (LDAC)";
 #endif
+#if ENABLE_LHDC
+		case A2DP_CODEC_VENDOR_LHDC_V3:
+			return "A2DP Sink (LHDC V3)";
+#endif
 		} break;
 	case BA_TRANSPORT_PROFILE_A2DP_SINK:
 		switch (codec_id) {
@@ -934,6 +938,10 @@ const char *ba_transport_debug_name(
 #if ENABLE_LDAC
 		case A2DP_CODEC_VENDOR_LDAC:
 			return "A2DP Sink (LDAC)";
+#endif
+#if ENABLE_LHDC
+		case A2DP_CODEC_VENDOR_LHDC_V3:
+			return "A2DP Sink (LHDC V3)";
 #endif
 		} break;
 	case BA_TRANSPORT_PROFILE_HFP_HF:

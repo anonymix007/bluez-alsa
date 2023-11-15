@@ -18,6 +18,11 @@
 # include <ldacBT.h>
 #endif
 
+#if ENABLE_LHDC
+# include <lhdcBT.h>
+# include <lhdcBT_dec.h>
+#endif
+
 #include "codec-sbc.h"
 #include "hfp.h"
 
@@ -131,6 +136,11 @@ struct ba_config config = {
 	.ldac_abr = false,
 	/* Use standard encoder quality as a reasonable default. */
 	.ldac_eqmid = LDACBT_EQMID_SQ,
+#endif
+
+#if ENABLE_LHDC
+	/* Use ABR as a reasonable default. */
+	.lhdc_eqmid = LHDCBT_QUALITY_AUTO,
 #endif
 
 };

@@ -2,6 +2,7 @@
 AAC
 ABR
 ADDR
+AOSP
 AVRCP
 BT
 CBR
@@ -63,6 +64,7 @@ BlueZ
 Fraunhofer
 IWYU
 LDAC
+LHDC
 MPD
 oFono
 PipeWire
@@ -173,7 +175,7 @@ iter
 keyp
 LF
 LFE
-LHDC
+LHDCBT
 libasound
 libbsd
 libdbus

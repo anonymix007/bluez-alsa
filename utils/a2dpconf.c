@@ -371,7 +371,7 @@ static void dump_ldac(const void *blob, size_t size) {
 			ldac->channel_mode & LDAC_CHANNEL_MODE_MONO ? " Mono" : "");
 }
 
-static int lhdc_get_max_bit_rate(const a2dp_lhdc_t *lhdc) {
+static int lhdc_get_max_bit_rate(const a2dp_lhdc_v2_t *lhdc) {
 	if (lhdc->max_bit_rate == LHDC_MAX_BIT_RATE_400K)
 		return 400;
 	if (lhdc->max_bit_rate == LHDC_MAX_BIT_RATE_500K)
@@ -381,8 +381,8 @@ static int lhdc_get_max_bit_rate(const a2dp_lhdc_t *lhdc) {
 	return -1;
 }
 
-static void dump_lhdc(const void *blob, size_t size) {
-	const a2dp_lhdc_t *lhdc = blob;
+static void dump_lhdc_v2(const void *blob, size_t size) {
+	const a2dp_lhdc_v2_t *lhdc = blob;
 	if (check_blob_size(sizeof(*lhdc), size) == -1)
 		return;
 	printf("LHDC <hex:%s> {\n", bintohex(blob, size));
@@ -450,7 +450,7 @@ static struct {
 	{ A2DP_CODEC_VENDOR_FASTSTREAM, sizeof(a2dp_faststream_t), dump_faststream },
 	{ A2DP_CODEC_VENDOR_LC3PLUS, sizeof(a2dp_lc3plus_t), dump_lc3plus },
 	{ A2DP_CODEC_VENDOR_LDAC, sizeof(a2dp_ldac_t), dump_ldac },
-	{ A2DP_CODEC_VENDOR_LHDC, sizeof(a2dp_lhdc_t), dump_lhdc },
+	{ A2DP_CODEC_VENDOR_LHDC_V2, sizeof(a2dp_lhdc_v2_t), dump_lhdc_v2 },
 	{ A2DP_CODEC_VENDOR_LHDC_LL, -1, dump_vendor },
 	{ A2DP_CODEC_VENDOR_LHDC_V1, sizeof(a2dp_lhdc_v1_t), dump_lhdc_v1 },
 	{ A2DP_CODEC_VENDOR_SAMSUNG_HD, -1, dump_vendor },

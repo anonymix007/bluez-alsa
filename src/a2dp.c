@@ -40,6 +40,9 @@
 #if ENABLE_LDAC
 # include "a2dp-ldac.h"
 #endif
+#if ENABLE_LHDC
+# include "a2dp-lhdc.h"
+#endif
 #if ENABLE_MPEG
 # include "a2dp-mpeg.h"
 #endif
@@ -55,6 +58,10 @@ struct a2dp_codec * const a2dp_codecs[] = {
 #if ENABLE_LC3PLUS
 	&a2dp_lc3plus_source,
 	&a2dp_lc3plus_sink,
+#endif
+#if ENABLE_LHDC
+	&a2dp_lhdc_source,
+	&a2dp_lhdc_sink,
 #endif
 #if ENABLE_LDAC
 	&a2dp_ldac_source,
@@ -119,6 +126,9 @@ int a2dp_codecs_init(void) {
 #endif
 #if ENABLE_LDAC
 	a2dp_ldac_init();
+#endif
+#if ENABLE_LHDC
+	a2dp_lhdc_init();
 #endif
 	return 0;
 }
@@ -276,12 +286,16 @@ uint16_t a2dp_get_vendor_codec_id(const void *capabilities, size_t size) {
 		} break;
 	case BT_COMPID_SAVITECH:
 		switch (codec_id) {
-		case LHDC_CODEC_ID:
-			return A2DP_CODEC_VENDOR_LHDC;
-		case LHDC_LL_CODEC_ID:
-			return A2DP_CODEC_VENDOR_LHDC_LL;
 		case LHDC_V1_CODEC_ID:
 			return A2DP_CODEC_VENDOR_LHDC_V1;
+		case LHDC_V2_CODEC_ID:
+			return A2DP_CODEC_VENDOR_LHDC_V2;
+		case LHDC_V3_CODEC_ID:
+			return A2DP_CODEC_VENDOR_LHDC_V3;
+		case LHDC_V5_CODEC_ID:
+			return A2DP_CODEC_VENDOR_LHDC_V5;
+		case LHDC_LL_CODEC_ID:
+			return A2DP_CODEC_VENDOR_LHDC_LL;
 		} break;
 	case BT_COMPID_FRAUNHOFER_IIS:
 		switch (codec_id) {
@@ -489,6 +503,15 @@ uint32_t a2dp_check_configuration(
 	}
 #endif
 
+#if ENABLE_LHDC
+	case A2DP_CODEC_VENDOR_LHDC_V3: {
+		const a2dp_lhdc_v3_t *cap = configuration;
+		cap_chm = LHDC_CHANNEL_MODE_STEREO;
+		cap_freq = cap->frequency;
+		break;
+	}
+#endif
+
 	default:
 		g_assert_not_reached();
 	}
@@ -573,6 +596,10 @@ int a2dp_filter_capabilities(
 #endif
 #if ENABLE_LDAC
 	case A2DP_CODEC_VENDOR_LDAC:
+		break;
+#endif
+#if ENABLE_LHDC
+	case A2DP_CODEC_VENDOR_LHDC_V3:
 		break;
 #endif
 	default:
@@ -922,6 +949,32 @@ int a2dp_select_configuration(
 	}
 #endif
 
+#if ENABLE_LHDC
+	case A2DP_CODEC_VENDOR_LHDC_V3: {
+		warn("LHDC: LLAC/V3/V4 switch logic is not implemented");
+		a2dp_lhdc_v3_t *cap = capabilities;
+
+		const unsigned int cap_bps = cap->bit_depth;
+
+		if (cap_bps & LHDC_BIT_DEPTH_24) {
+			cap->bit_depth = LHDC_BIT_DEPTH_24;
+		} else if (cap_bps & LHDC_BIT_DEPTH_16) {
+			cap->bit_depth = LHDC_BIT_DEPTH_16;
+		} else {
+			error("LHDC: No supported bit depths: %#x", tmp.lhdc_v3.bit_depth);
+			goto fail;
+		}
+
+		const unsigned int cap_freq = cap->frequency;
+		if ((cap->frequency = a2dp_codec_select_sampling_freq(codec, cap_freq, false)) == 0) {
+			error("LHDC: No supported sampling frequencies: %#x", tmp.lhdc_v3.frequency);
+			goto fail;
+		}
+
+		break;
+	}
+#endif
+
 	default:
 		g_assert_not_reached();
 	}
@@ -975,6 +1028,11 @@ void a2dp_transport_init(
 		a2dp_ldac_transport_init(t);
 		break;
 #endif
+#if ENABLE_LHDC
+	case A2DP_CODEC_VENDOR_LHDC_V3:
+		a2dp_lhdc_transport_init(t);
+		break;
+#endif
 	default:
 		debug("Unsupported A2DP codec: %#x", codec_id);
 		g_assert_not_reached();
@@ -1014,6 +1072,10 @@ int a2dp_transport_start(
 #if ENABLE_LDAC
 	case A2DP_CODEC_VENDOR_LDAC:
 		return a2dp_ldac_transport_start(t);
+#endif
+#if ENABLE_LHDC
+	case A2DP_CODEC_VENDOR_LHDC_V3:
+		return a2dp_lhdc_transport_start(t);
 #endif
 	default:
 		debug("Unsupported A2DP codec: %#x", codec_id);
