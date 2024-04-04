@@ -160,6 +160,7 @@ test_io_SOURCES = \
 if ENABLE_MIDI
 test_ble_midi_SOURCES = \
 	../src/shared/log.c \
+	../src/shared/rt.c \
 	../src/ble-midi.c \
 	test-ble-midi.c
 endif
@@ -306,6 +307,7 @@ AM_CFLAGS = \
 	@LDAC_ENC_CFLAGS@ \
 	@LIBBSD_CFLAGS@ \
 	@LIBUNWIND_CFLAGS@ \
+	@MP3LAME_CFLAGS@ \
 	@MPG123_CFLAGS@ \
 	@SBC_CFLAGS@ \
 	@SNDFILE_CFLAGS@ \
