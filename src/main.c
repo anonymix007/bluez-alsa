@@ -179,16 +179,16 @@ int main(int argc, char **argv) {
 		{ "aac-true-bps", no_argument, NULL, 18 },
 		{ "aac-vbr", no_argument, NULL, 19 },
 #endif
-#if ENABLE_LHDC
-		// TODO: LLAC/V3/V4, bit depth, sample frequency, LLAC bitrate
-		{ "lhdc-quality", required_argument, NULL, 22 },
-#endif
 #if ENABLE_LC3PLUS
 		{ "lc3plus-bitrate", required_argument, NULL, 20 },
 #endif
 #if ENABLE_LDAC
 		{ "ldac-abr", no_argument, NULL, 10 },
 		{ "ldac-quality", required_argument, NULL, 11 },
+#endif
+#if ENABLE_LHDC
+		// TODO: LLAC/V3/V4, bit depth, sample frequency, LLAC bitrate
+		{ "lhdc-quality", required_argument, NULL, 24 },
 #endif
 #if ENABLE_MP3LAME
 		{ "mp3-algorithm", required_argument, NULL, 12 },
@@ -537,7 +537,8 @@ int main(int argc, char **argv) {
 #endif
 
 #if ENABLE_LHDC
-		case 22 /* --lhdc-quality=MODE */ : {
+		case 24 /* --lhdc-quality=MODE */ : {
+
 			static const nv_entry_t values[] = {
 				{ "low0", .v.ui = LHDCBT_QUALITY_LOW0 },
 				{ "low1", .v.ui = LHDCBT_QUALITY_LOW1 },

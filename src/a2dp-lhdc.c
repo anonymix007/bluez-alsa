@@ -122,7 +122,8 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 	pthread_cleanup_push(PTHREAD_CLEANUP(free), pcm_ch2);
 
 	if (ffb_init_int32_t(&pcm, lhdc_pcm_samples) == -1 ||
-			ffb_init_uint8_t(&bt, t->mtu_write) == -1) {
+			ffb_init_uint8_t(&bt, t->mtu_write) == -1 ||
+			pcm_ch1 == NULL || pcm_ch2 == NULL) {
 		error("Couldn't create data buffers: %s", strerror(errno));
 		goto fail_ffb;
 	}
@@ -133,6 +134,7 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 		uint8_t latency:2;
 		uint8_t frames:6;
 	} *lhdc_media_header;
+
 	/* initialize RTP headers and get anchor for payload */
 	uint8_t *rtp_payload = rtp_a2dp_init(bt.data, &rtp_header,
 			(void **)&lhdc_media_header, sizeof(*lhdc_media_header));
@@ -146,8 +148,7 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 	debug_transport_pcm_thread_loop(t_pcm, "START");
 	for (ba_transport_pcm_state_set_running(t_pcm);;) {
 
-		ssize_t samples = ffb_len_in(&pcm);
-		switch (samples = io_poll_and_read_pcm(&io, t_pcm, pcm.tail)) {
+		switch (io_poll_and_read_pcm(&io, t_pcm, &pcm)) {
 		case -1:
 			if (errno == ESTALE) {
 				ffb_rewind(&pcm);
@@ -160,10 +161,8 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 			continue;
 		}
 
-		ffb_seek(&pcm, samples);
-		samples = ffb_len_out(&pcm);
-
-		int *input = pcm.data;
+		int32_t *input = pcm.data;
+		ssize_t samples = ffb_len_out(&pcm);
 		size_t input_len = samples;
 
 		/* encode and transfer obtained data */
@@ -188,11 +187,11 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 
 			if (encoded > 0) {
 
+				rtp_state_new_frame(&rtp, rtp_header);
+
 				lhdc_media_header->seq_num = seq_num++;
 				lhdc_media_header->latency = 0;
 				lhdc_media_header->frames = frames;
-
-				rtp_state_new_frame(&rtp, rtp_header);
 
 				/* Try to get the number of bytes queued in the
 				 * socket output buffer. */
@@ -217,6 +216,7 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 
 				if (config.lhdc_eqmid == LHDCBT_QUALITY_AUTO)
 					lhdcBT_adjust_bitrate(handle, queued_bytes / t->mtu_write);
+
 			}
 
 			unsigned int pcm_frames = lhdc_pcm_samples / channels;
@@ -304,8 +304,9 @@ void *a2dp_lhdc_dec_thread(struct ba_transport_pcm *t_pcm) {
 	debug_transport_pcm_thread_loop(t_pcm, "START");
 	for (ba_transport_pcm_state_set_running(t_pcm);;) {
 
-		ssize_t len = ffb_blen_in(&bt);
-		if ((len = io_poll_and_read_bt(&io, t_pcm, bt.data)) <= 0) {
+		ssize_t len;
+		ffb_rewind(&bt);
+		if ((len = io_poll_and_read_bt(&io, t_pcm, &bt)) <= 0) {
 			if (len == -1)
 				error("BT poll and read error: %s", strerror(errno));
 			goto fail;
@@ -334,7 +335,7 @@ void *a2dp_lhdc_dec_thread(struct ba_transport_pcm *t_pcm) {
 		const size_t samples = decoded / sample_size;
 		io_pcm_scale(t_pcm, pcm.data, samples);
 		if (io_pcm_write(t_pcm, pcm.data, samples) == -1)
-			error("FIFO write error: %s", strerror(errno));
+			error("PCM write error: %s", strerror(errno));
 
 		/* update local state with decoded PCM frames */
 		rtp_state_update(&rtp, samples / channels);
