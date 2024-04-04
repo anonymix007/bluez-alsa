@@ -101,8 +101,16 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 	lhdcBT_set_hasMinBitrateLimit(handle, configuration->min_bitrate);
 	lhdcBT_set_max_bitrate(handle, get_max_bitrate(configuration));
 
+	struct {
+		uint8_t seq_num;
+		uint8_t latency:2;
+		uint8_t frames:6;
+	} *lhdc_media_header;
+
+	rtp_header_t *rtp_header;
+
 	if (lhdcBT_init_encoder(handle, samplerate, bitdepth, config.lhdc_eqmid,
-			configuration->ch_split_mode > LHDC_CH_SPLIT_MODE_NONE, 0, t->mtu_write,
+			configuration->ch_split_mode > LHDC_CH_SPLIT_MODE_NONE, 0, t->mtu_write - sizeof(*lhdc_media_header) - sizeof(*rtp_header) + sizeof(rtp_header->csrc),
 			get_encoder_interval(configuration)) == -1) {
 		error("Couldn't initialize LHDC encoder");
 		goto fail_init;
@@ -128,12 +136,7 @@ void *a2dp_lhdc_enc_thread(struct ba_transport_pcm *t_pcm) {
 		goto fail_ffb;
 	}
 
-	rtp_header_t *rtp_header;
-	struct {
-		uint8_t seq_num;
-		uint8_t latency:2;
-		uint8_t frames:6;
-	} *lhdc_media_header;
+
 
 	/* initialize RTP headers and get anchor for payload */
 	uint8_t *rtp_payload = rtp_a2dp_init(bt.data, &rtp_header,
